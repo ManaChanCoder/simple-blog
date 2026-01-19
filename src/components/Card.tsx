@@ -10,9 +10,9 @@ import {
 } from "../helper/service";
 import Modal from "./modal/Modal";
 import { useLocation } from "react-router-dom";
+import Pagination from "./pagination";
 
 import { TailSpin } from "react-loader-spinner";
-import Pagination from "./pagination";
 
 interface CardProps {
   cardLimit?: number;
