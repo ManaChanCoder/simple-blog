@@ -7,7 +7,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({
+const PaginationTemp: React.FC<PaginationProps> = ({
   page,
   pageSize,
   total,
@@ -42,4 +42,4 @@ const Pagination: React.FC<PaginationProps> = ({
   );
 };
 
-export default Pagination;
+export default PaginationTemp;

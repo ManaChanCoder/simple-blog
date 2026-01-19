@@ -10,7 +10,7 @@ import {
 } from "../helper/service";
 import Modal from "./modal/Modal";
 import { useLocation } from "react-router-dom";
-import Pagination from "./pagination";
+import PaginationTemp from "./PaginationTemp";
 
 import { TailSpin } from "react-loader-spinner";
 
@@ -138,7 +138,7 @@ export default function Card({ cardLimit }: CardProps) {
           ))}
         </div>
         {location.pathname !== "/" && location.pathname !== "/dashboard" && (
-          <Pagination
+          <PaginationTemp
             page={page}
             pageSize={pageSize}
             total={total}
