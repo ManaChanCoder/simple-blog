@@ -3,7 +3,7 @@ import type { User } from "@supabase/supabase-js";
 
 export interface CardState {
   id: number;
-  image_url: string;
+  image_url: string | null;
   title: string;
   description: string;
   created_at: string;
@@ -62,7 +62,7 @@ export interface DashboardBannerThemeState {
 export interface PostState {
   title: string;
   description: string;
-  image_url: string;
+  image_url: string | null;
   user_id: string;
 }
 
@@ -74,6 +74,6 @@ export interface BlogCard {
   id: number;
   title: string;
   description: string;
-  image_url: string;
+  image_url: string | null;
   created_at: string;
 }

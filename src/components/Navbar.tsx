@@ -64,15 +64,21 @@ const Navbar = () => {
     ).value;
 
     if (!user) return alert("Please login first");
-    if (!imageFile) return alert("Please select an image");
+    if (!title.trim()) return alert("Title is required");
+    if (!description.trim()) return alert("Description is required");
 
     try {
-      const imageUrl = await uploadImage(imageFile);
+      let imageUrl: string | null = null;
+
+      // ✅ upload only if may image
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
 
       await createPost({
         title,
         description,
-        image_url: imageUrl,
+        image_url: imageUrl, // 👈 can be null
         user_id: user.id,
       });
 
@@ -80,9 +86,7 @@ const Navbar = () => {
       setIsPostModalOpen(false);
       setFileName("Upload Image");
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Upload image failed";
-      alert(message);
+      alert(err instanceof Error ? err.message : "Post failed");
     }
   };
 

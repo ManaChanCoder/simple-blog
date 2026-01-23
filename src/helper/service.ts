@@ -1,10 +1,13 @@
 import { supabase } from "../connection/connectionDb";
 import type { PostState } from "../interface";
 
-export const formatDate = (dateStr: string) => {
+/* =======================
+   DATE FORMATTER
+======================= */
+export const formatDate = (dateStr?: string | null) => {
   if (!dateStr) return "No Date";
-  const d = new Date(dateStr);
 
+  const d = new Date(dateStr);
   if (isNaN(d.getTime())) return "Invalid date";
 
   return `${d.toLocaleDateString("en-US", {
@@ -18,7 +21,10 @@ export const formatDate = (dateStr: string) => {
   })}`;
 };
 
-export const wordTruncate = (text: string, wordLimit: number) => {
+/* =======================
+   TEXT TRUNCATE
+======================= */
+export const wordTruncate = (text?: string | null, wordLimit = 20) => {
   if (!text) return "";
 
   const words = text.split(/\s+/);
@@ -27,10 +33,13 @@ export const wordTruncate = (text: string, wordLimit: number) => {
   return words.slice(0, wordLimit).join(" ") + "...";
 };
 
+/* =======================
+   IMAGE UPLOAD
+======================= */
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export async function uploadImage(file: File) {
+export async function uploadImage(file: File): Promise<string> {
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error("Only JPG, PNG, WEBP allowed");
   }
@@ -47,17 +56,18 @@ export async function uploadImage(file: File) {
 
   if (error) throw error;
 
-  const { data: urlData } = supabase.storage
-    .from("blog-images")
-    .getPublicUrl(filePath);
+  const { data } = supabase.storage.from("blog-images").getPublicUrl(filePath);
 
-  if (!urlData?.publicUrl) {
+  if (!data?.publicUrl) {
     throw new Error("Unable to get public URL");
   }
 
-  return urlData.publicUrl;
+  return data.publicUrl;
 }
 
+/* =======================
+   CREATE POST
+======================= */
 export async function createPost({
   title,
   description,
@@ -68,7 +78,7 @@ export async function createPost({
     {
       title,
       description,
-      image_url,
+      image_url: image_url ?? null,
       user_id,
     },
   ]);
@@ -77,12 +87,15 @@ export async function createPost({
   return data;
 }
 
+/* =======================
+   UPDATE POST
+======================= */
 export async function updatePost(
   id: number,
   payload: {
     title: string;
     description: string;
-    image_url?: string;
+    image_url?: string | null;
   },
 ) {
   const {
@@ -93,9 +106,12 @@ export async function updatePost(
 
   const { data, error } = await supabase
     .from("blog")
-    .update(payload)
+    .update({
+      ...payload,
+      image_url: payload.image_url ?? null,
+    })
     .eq("id", id)
-    .eq("user_id", user.id) // 🔥 IMPORTANT
+    .eq("user_id", user.id)
     .select()
     .single();
 
@@ -105,7 +121,13 @@ export async function updatePost(
   return data;
 }
 
-export async function deletePostWithImage(id: number, imageUrl?: string) {
+/* =======================
+   DELETE POST + IMAGE
+======================= */
+export async function deletePostWithImage(
+  id: number,
+  imageUrl?: string | null,
+) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -123,7 +145,7 @@ export async function deletePostWithImage(id: number, imageUrl?: string) {
     .from("blog")
     .delete()
     .eq("id", id)
-    .eq("user_id", user.id); // 🔥 IMPORTANT
+    .eq("user_id", user.id);
 
   if (error) throw error;
 }

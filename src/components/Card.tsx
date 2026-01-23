@@ -38,7 +38,7 @@ export default function Card({ cardLimit }: CardProps) {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
-  const [editImagePreview, setEditImagePreview] = useState("");
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
   const [commentText, setCommentText] = useState("");
 
@@ -64,7 +64,7 @@ export default function Card({ cardLimit }: CardProps) {
 
     setEditTitle(selectedCard.title);
     setEditDescription(selectedCard.description);
-    setEditImagePreview(selectedCard.image_url);
+    setEditImagePreview(selectedCard.image_url ?? null);
     setEditSelectedCard(true);
   };
 
@@ -81,7 +81,7 @@ export default function Card({ cardLimit }: CardProps) {
     if (!selectedCard) return;
 
     try {
-      let imageUrl = selectedCard.image_url;
+      let imageUrl: string | null = selectedCard.image_url ?? null;
 
       if (editImageFile) {
         imageUrl = await uploadImage(editImageFile);
@@ -107,7 +107,10 @@ export default function Card({ cardLimit }: CardProps) {
     if (!selectedCard) return;
 
     try {
-      await deletePostWithImage(selectedCard.id, selectedCard.image_url);
+      await deletePostWithImage(
+        selectedCard.id,
+        selectedCard.image_url ?? null,
+      );
 
       alert("Post deleted!");
       setOpenModal(false);
@@ -118,7 +121,6 @@ export default function Card({ cardLimit }: CardProps) {
     }
   };
 
-  // loading state
   if (loading)
     return (
       <div className="h-50 mt-20 flex justify-center">
@@ -140,10 +142,12 @@ export default function Card({ cardLimit }: CardProps) {
               className="w-100 max-w-[90%] h-full p-5 rounded-sm shadow-lg cursor-pointer"
               onClick={() => openViewModal(card)}
             >
-              <img
-                src={card.image_url}
-                className="w-full h-56 object-cover rounded"
-              />
+              {card.image_url && (
+                <img
+                  src={card.image_url}
+                  className="w-full h-56 object-cover rounded"
+                />
+              )}
 
               <span className="mt-5 mb-5 h-10 block text-lg font-semibold">
                 {card.title}
@@ -188,7 +192,13 @@ export default function Card({ cardLimit }: CardProps) {
       >
         {selectedCard && (
           <div>
-            <img src={selectedCard.image_url} className="w-full h-40 rounded" />
+            {selectedCard.image_url && (
+              <img
+                src={selectedCard.image_url}
+                className="w-full h-40 rounded"
+              />
+            )}
+
             <h2 className="text-2xl font-bold mt-5">{selectedCard.title}</h2>
             <p>{selectedCard.description}</p>
             <p className="text-xs text-right mb-3">
@@ -268,10 +278,12 @@ export default function Card({ cardLimit }: CardProps) {
       >
         {selectedCard && (
           <form onSubmit={handleUpdatePost}>
-            <img
-              src={editImagePreview}
-              className="w-full h-20 rounded mb-3 object-cover"
-            />
+            {editImagePreview && (
+              <img
+                src={editImagePreview}
+                className="w-full h-20 rounded mb-3 object-cover"
+              />
+            )}
 
             <input
               type="file"
@@ -280,9 +292,8 @@ export default function Card({ cardLimit }: CardProps) {
                 const file = e.target.files?.[0];
                 if (!file) return;
 
-                const preview = URL.createObjectURL(file);
                 setEditImageFile(file);
-                setEditImagePreview(preview);
+                setEditImagePreview(URL.createObjectURL(file));
               }}
             />
 
