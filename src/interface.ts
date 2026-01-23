@@ -9,6 +9,18 @@ export interface CardState {
   created_at: string;
 }
 
+export interface CommentState {
+  id: number;
+  post_id: number;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: {
+    id: string;
+    email: string;
+  };
+}
+
 export interface NavLinkState {
   title: string;
   location?: string;
