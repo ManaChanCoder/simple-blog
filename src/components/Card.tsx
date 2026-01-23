@@ -52,7 +52,7 @@ export default function Card({ cardLimit }: CardProps) {
       });
 
       alert("Post updated!");
-      setSelectedCard(updatedData[0]);
+      setSelectedCard(updatedData);
       setEditSelectedCard(false);
       setOpenModal(false);
       getPost(); // refresh list

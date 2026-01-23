@@ -85,17 +85,33 @@ export async function updatePost(
     image_url?: string;
   },
 ) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
   const { data, error } = await supabase
     .from("blog")
     .update(payload)
     .eq("id", id)
-    .select();
+    .eq("user_id", user.id) // 🔥 IMPORTANT
+    .select()
+    .single();
 
   if (error) throw error;
+  if (!data) throw new Error("No row updated");
+
   return data;
 }
 
 export async function deletePostWithImage(id: number, imageUrl?: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
   if (imageUrl) {
     const path = imageUrl.split("/blog-images/")[1];
     if (path) {
@@ -103,6 +119,11 @@ export async function deletePostWithImage(id: number, imageUrl?: string) {
     }
   }
 
-  const { error } = await supabase.from("blog").delete().eq("id", id);
+  const { error } = await supabase
+    .from("blog")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id); // 🔥 IMPORTANT
+
   if (error) throw error;
 }
