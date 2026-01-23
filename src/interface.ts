@@ -65,3 +65,15 @@ export interface PostState {
   image_url: string;
   user_id: string;
 }
+
+export interface CardProps {
+  cardLimit?: number;
+}
+
+export interface BlogCard {
+  id: number;
+  title: string;
+  description: string;
+  image_url: string;
+  created_at: string;
+}

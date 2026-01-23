@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { blogStore } from "../store/blogStore";
-import { themeStore } from "../store/themeStore";
 import {
   formatDate,
   wordTruncate,
@@ -8,15 +7,12 @@ import {
   uploadImage,
   deletePostWithImage,
 } from "../helper/service";
+import type { CardProps, BlogCard } from "../interface";
 import Modal from "./modal/Modal";
 import { useLocation } from "react-router-dom";
 import PaginationTemp from "./PaginationTemp";
 import { MdDeleteForever } from "react-icons/md";
 import { TailSpin } from "react-loader-spinner";
-
-interface CardProps {
-  cardLimit?: number;
-}
 
 export default function Card({ cardLimit }: CardProps) {
   const {
@@ -32,18 +28,17 @@ export default function Card({ cardLimit }: CardProps) {
     pageSize,
     total,
   } = blogStore();
-  const isDark = themeStore((state) => state.isDark);
 
-  const [openModal, setOpenModal] = useState<boolean>(false);
-  const [commentModal, setCommentModal] = useState<boolean>(false);
-  const [editSelectedCard, setEditSelectedCard] = useState<boolean>(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [commentModal, setCommentModal] = useState(false);
+  const [editSelectedCard, setEditSelectedCard] = useState(false);
 
-  const [selectedCard, setSelectedCard] = useState<any | null>(null);
+  const [selectedCard, setSelectedCard] = useState<BlogCard | null>(null);
 
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
-  const [editImagePreview, setEditImagePreview] = useState<string>("");
+  const [editImagePreview, setEditImagePreview] = useState("");
 
   const [commentText, setCommentText] = useState("");
 
@@ -51,15 +46,15 @@ export default function Card({ cardLimit }: CardProps) {
 
   useEffect(() => {
     getPost(page);
-  }, [page]);
+  }, [page, getPost]);
 
-  const openComment = async (card: any) => {
+  const openComment = async (card: BlogCard) => {
     setSelectedCard(card);
     setCommentModal(true);
     await getComments(card.id);
   };
 
-  const openViewModal = (card: any) => {
+  const openViewModal = (card: BlogCard) => {
     setSelectedCard(card);
     setOpenModal(true);
   };
@@ -74,13 +69,17 @@ export default function Card({ cardLimit }: CardProps) {
   };
 
   const handleAddComment = async () => {
+    if (!selectedCard) return;
     if (!commentText.trim()) return alert("Comment is required");
+
     await addComment(selectedCard.id, commentText);
     setCommentText("");
   };
 
   const handleUpdatePost = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedCard) return;
+
     try {
       let imageUrl = selectedCard.image_url;
 
@@ -98,29 +97,32 @@ export default function Card({ cardLimit }: CardProps) {
       setSelectedCard(updatedData);
       setEditSelectedCard(false);
       setOpenModal(false);
-      getPost();
+      getPost(page);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Update failed");
     }
   };
 
   const handleDeletePost = async () => {
+    if (!selectedCard) return;
+
     try {
       await deletePostWithImage(selectedCard.id, selectedCard.image_url);
 
       alert("Post deleted!");
       setOpenModal(false);
       setSelectedCard(null);
-      getPost();
+      getPost(page);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Delete failed");
     }
   };
 
+  // loading state
   if (loading)
     return (
       <div className="h-50 mt-20 flex justify-center">
-        <TailSpin visible={true} height="50" width="50" />
+        <TailSpin height="50" width="50" />
       </div>
     );
 
@@ -129,26 +131,25 @@ export default function Card({ cardLimit }: CardProps) {
   const displayedCards = cardLimit ? cards.slice(0, cardLimit) : cards;
 
   return (
-    <div className={`flex flex-col md:flex-row justify-center gap-5 px-5`}>
-      <div className="">
+    <div className="flex flex-col md:flex-row justify-center gap-5 px-5">
+      <div>
         <div className="grid gap-6 px-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 place-items-center">
-          {displayedCards.map((card) => (
+          {displayedCards.map((card: BlogCard) => (
             <div
               key={card.id}
-              className={`w-100 max-w-[90%] h-full p-5 rounded-sm shadow-lg`}
-              onClick={() => openViewModal(card)} // <-- FIXED
+              className="w-100 max-w-[90%] h-full p-5 rounded-sm shadow-lg cursor-pointer"
+              onClick={() => openViewModal(card)}
             >
               <img
                 src={card.image_url}
-                alt={`card image - ${card.id}`}
                 className="w-full h-56 object-cover rounded"
               />
 
-              <span className="mt-5 mb-1 block text-2xl font-semibold">
+              <span className="mt-5 mb-5 h-10 block text-lg font-semibold">
                 {card.title}
               </span>
 
-              <span className="block mb-4 text-sm opacity-90">
+              <span className="block h-15 mb-4 text-sm opacity-90">
                 {wordTruncate(card.description, 20)}
               </span>
 
@@ -179,14 +180,14 @@ export default function Card({ cardLimit }: CardProps) {
         )}
       </div>
 
-      {/* VIEW POST MODAL */}
+      {/* VIEW MODAL */}
       <Modal
         title="View Post"
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
       >
         {selectedCard && (
-          <div className="">
+          <div>
             <img src={selectedCard.image_url} className="w-full h-40 rounded" />
             <h2 className="text-2xl font-bold mt-5">{selectedCard.title}</h2>
             <p>{selectedCard.description}</p>
@@ -194,7 +195,7 @@ export default function Card({ cardLimit }: CardProps) {
               {formatDate(selectedCard.created_at)}
             </p>
 
-            <div className="flex justify-start gap-5 text-black">
+            <div className="flex gap-5">
               <button
                 onClick={openEditModal}
                 className="px-4 py-2 bg-blue-400 rounded"
@@ -220,22 +221,19 @@ export default function Card({ cardLimit }: CardProps) {
       >
         {selectedCard && (
           <div>
-            <h2 className="text-xl font-bold mb-2">{selectedCard.title}</h2>
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="w-full p-2 border rounded"
+              placeholder="Write your comment..."
+            />
 
-            <div className="mb-3">
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="w-full p-2 border outline-0 rounded"
-                placeholder="Write your comment..."
-              />
-              <button
-                onClick={handleAddComment}
-                className="mt-2 px-4 py-2 bg-blue-500 rounded text-white"
-              >
-                Add Comment
-              </button>
-            </div>
+            <button
+              onClick={handleAddComment}
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Add Comment
+            </button>
 
             <div className="mt-3">
               {comments.map((c) => (
@@ -243,14 +241,16 @@ export default function Card({ cardLimit }: CardProps) {
                   key={c.id}
                   className="flex justify-between items-center border p-2 rounded mb-2"
                 >
-                  <div className="">
+                  <div>
                     <p>{c.content}</p>
                     <span className="text-xs opacity-70">
                       {formatDate(c.created_at)}
                     </span>
                   </div>
+
                   <MdDeleteForever
                     size={20}
+                    className="cursor-pointer"
                     onClick={() => deleteComment(c.id, selectedCard.id)}
                   />
                 </div>
@@ -260,7 +260,7 @@ export default function Card({ cardLimit }: CardProps) {
         )}
       </Modal>
 
-      {/* EDIT POST MODAL */}
+      {/* EDIT MODAL */}
       <Modal
         title="Edit Post"
         isOpen={editSelectedCard}
@@ -268,31 +268,30 @@ export default function Card({ cardLimit }: CardProps) {
       >
         {selectedCard && (
           <form onSubmit={handleUpdatePost}>
-            <div className="relative">
-              <img
-                src={editImagePreview}
-                className="w-full h-20 rounded mb-3 object-cover"
-              />
-              <input
-                type="file"
-                accept="image/*"
-                className="mb-3 opacity-0 w-full h-full absolute top-0"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setEditImageFile(file);
-                    setEditImagePreview(URL.createObjectURL(file));
-                  }
-                }}
-              />
-            </div>
+            <img
+              src={editImagePreview}
+              className="w-full h-20 rounded mb-3 object-cover"
+            />
 
             <input
-              type="text"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                const preview = URL.createObjectURL(file);
+                setEditImageFile(file);
+                setEditImagePreview(preview);
+              }}
+            />
+
+            <input
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full p-1 rounded mb-2"
+              className="w-full p-1 rounded my-2"
             />
+
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
