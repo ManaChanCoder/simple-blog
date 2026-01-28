@@ -39,6 +39,7 @@ export default function Card({ cardLimit }: CardProps) {
   const [editDescription, setEditDescription] = useState("");
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const [commentText, setCommentText] = useState("");
 
@@ -65,6 +66,8 @@ export default function Card({ cardLimit }: CardProps) {
     setEditTitle(selectedCard.title);
     setEditDescription(selectedCard.description);
     setEditImagePreview(selectedCard.image_url ?? null);
+    setEditImageFile(null);
+    setRemoveImage(false);
     setEditSelectedCard(true);
   };
 
@@ -82,6 +85,9 @@ export default function Card({ cardLimit }: CardProps) {
 
     try {
       let imageUrl: string | null = selectedCard.image_url ?? null;
+      if (removeImage) {
+        imageUrl = null;
+      }
 
       if (editImageFile) {
         imageUrl = await uploadImage(editImageFile);
@@ -279,10 +285,24 @@ export default function Card({ cardLimit }: CardProps) {
         {selectedCard && (
           <form onSubmit={handleUpdatePost}>
             {editImagePreview && (
-              <img
-                src={editImagePreview}
-                className="w-full h-20 rounded mb-3 object-cover"
-              />
+              <div className="relative mb-3">
+                <img
+                  src={editImagePreview}
+                  className="w-full h-20 rounded object-cover"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditImagePreview(null);
+                    setEditImageFile(null);
+                    setRemoveImage(true);
+                  }}
+                  className="absolute top-1 right-1 px-2 py-1 text-xs bg-red-500 text-white rounded"
+                >
+                  Remove
+                </button>
+              </div>
             )}
 
             <input
